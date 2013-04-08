@@ -352,6 +352,7 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                 type : 'spline',
                 dataIndex : 'yesterday',
                 name : 'Yesterday',
+                cursor: 'pointer',
                 events: {
                     click: function(evt) {
                         Demo.menu && (Demo.menu.destroy()) && (Demo.menu = null);
@@ -404,6 +405,7 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                 name : 'Today',
                 xField : 'time',
                 point: {
+                    cursor: 'pointer',
                     events: {
                         click: function(evt) {
                             Demo.menu && (Demo.menu.destroy()) && (Demo.menu = null);
@@ -454,11 +456,6 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                 title : {
                     text : 'Left click on Yesterday series for series menu and left click on Today series for point menu',
                     x : -20 //center
-                },
-                plotOptions: {
-                    series: {
-                        cursor: 'pointer'
-                    }
                 },
                 subtitle : {
                     text : 'Random Value',
@@ -960,10 +957,9 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
             series : [{
                 type : 'column',
                 dataIndex : 'usage',
-                colorByPoint: true,
+                colorField: 'color',
                 // Set this to white, so won't interfere with the series
                 // index color
-                color: 'white',
                 name: 'Browser brands'
             }],
             xField: 'vendor',
@@ -984,6 +980,7 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                         text : 'Total percent market share'
                     }
                 },
+                legend: { enabled: false },
                 plotOptions: {
                     column: {
                         cursor: 'pointer',
@@ -1000,47 +997,18 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                         point: {
                             events: {
                                 click: function(evt) {
-
                                     var selectPoint = this;
                                     var store = Ext.getCmp('main_chart').store;
                                     var extraParams = store.getProxy().extraParams;
 
-                                    var dataIndex = '', xField = '';
-                                    var series = null;
                                     // Flick store params
                                     if (extraParams.total) {
                                         delete extraParams.total;
                                         extraParams.browser = this.category;
-                                        series = {
-                                            dataIndex: 'usage',
-                                            // Set all the point colors to the series color
-                                            color: this.color,
-                                            name: 'Versions',
-                                            type: 'column'
-                                        };
-                                        xField = 'version';
                                     } else {
                                         extraParams.total = true;
                                         delete extraParams.browser;
-                                        series = {
-                                            dataIndex: 'usage',
-                                            // Automatic set the data point based on Highcharts
-                                            // colors order and the data point order
-                                            colorByPoint: true,
-                                            type: 'column',
-                                            name: 'Browser brands',
-                                            color: 'white'
-                                        };
-                                        xField = 'vendor';
                                     }
-
-                                    // Reset the data mapping, as we have already created
-                                    // the chart. All we need to do is to reset the value
-                                    // inside the chartConfig and call redraw
-                                    var chartExt = Ext.getCmp('main_chart');
-                                    // addSeries without append means replacing the series
-                                    chartExt.addSeries([series]);
-                                    chartExt.xField = xField;
 
                                     // Because this extension has already binded store,
                                     // that means the chart will automatically after
@@ -1240,6 +1208,7 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                 name: 'Browsers',
                 size: '60%',
                 totalDataField: true,
+                colorField: 'color',
                 dataLabels: {
                     formatter: function() {
                         return this.y > 5 ? this.point.name : null;
@@ -1251,6 +1220,7 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                 type : 'pie',
                 categorieField : 'version',
                 dataField: 'usage',
+                colorField: 'color',
                 name: 'Versions',
                 innerSize: '60%',
                 dataLabels: {
@@ -1266,26 +1236,22 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                     marginRight : 130,
                     marginBottom : 120
                 },
+                plotOptions: {
+                    pie: {
+                        shadow: false,
+                        center: ['50%', '50%']
+                    }
+                },
                 title : {
                     text : 'Highcharts (' + Highcharts.version + ') Donut Pie for ExtJs ' + Ext.versions.core.version,
-                    x : -20 //center
                 },
                 subtitle : {
                     text : 'Browser market share, April, 2011',
-                    x : -20
                 },
                 tooltip : {
                     formatter : function () {
 				                return '<b>'+ this.point.name +'</b>: '+ this.y +' %';
                     }
-                },
-                legend : {
-                    layout : 'vertical',
-                    align : 'right',
-                    verticalAlign : 'top',
-                    x : -10,
-                    y : 100,
-                    borderWidth : 0
                 },
                 credits : {
                     text : 'joekuan.wordpress.com',
@@ -1601,9 +1567,9 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
             listeners: {
                 afterChartRendered: function(chart) {
                     var hcExt = this;
-                    this.runnerTask && this.runnerTask.destroy();
-                    this.runner = new Ext.util.TaskRunner();
-                    this.runnerTask = this.runner.start({
+                    Demo.gaugeRunnerTask && Demo.gaugeRunnerTask.destroy();
+                    Demo.gaugeRunnerTask = new Ext.util.TaskRunner();
+                    Demo.gaugeRunnerTask.start({
                         run: function() {
                             hcExt.store.load({
                                 scope: this,  // runnerTask
@@ -1821,6 +1787,289 @@ Ext.define ("Highcharts.ChartsDesktopConfig", {
                 tooltip: { enabled: false },
                 credits: {
                     enabled: false 
+                }
+            }
+        },
+
+        /********************************************************************
+         * Bubble single series - use xField, yField and radius
+         ********************************************************************/
+        bubbleSingle : {
+            series : [{
+                type : 'bubble',
+                xField: 'x',
+                yField: 'y',
+                radiusField: 'r',
+                marker: {
+                    fillColor: {
+                        radialGradient: { cx: 0.4, cy: 0.3, r: 0.7 },
+                        stops: [
+                            [0, 'rgba(255,255,255,0.5)'],
+                            [1, 'rgba(69,114,167,0.5)']
+                        ]
+                    }
+                }
+            }],
+            height : 500,
+            width : 700,
+            chartConfig : {
+                chart : {
+                    marginRight : 130,
+                    marginBottom : 120
+                },
+                title : {
+                    text : "Single bubble series - use xField, yField and radiusField",
+                    x : -20 //center
+                },
+                credits : {
+                    text : 'joekuan.wordpress.com',
+                    href : 'http://joekuan.wordpress.com',
+                    style : {
+                        cursor : 'pointer',
+                        color : '#707070',
+                        fontSize : '12px'
+                    }
+                }
+            }
+        },
+
+        /********************************************************************
+         * Bubble multiple series - same as Irregular data series
+         ********************************************************************/
+        bubbleMulti : {
+            series : [{
+                type : 'bubble',
+                dataIndex : 'series1'
+            }, {
+                type : 'bubble',
+                dataIndex : 'series2'
+            }],
+            height : 500,
+            width : 700,
+            chartConfig : {
+                chart : {
+                    marginRight : 130,
+                    marginBottom : 120
+                },
+                title : {
+                    text : "Multiple bubble series - irregular data",
+                    x : -20 //center
+                },
+                credits : {
+                    text : 'joekuan.wordpress.com',
+                    href : 'http://joekuan.wordpress.com',
+                    style : {
+                        cursor : 'pointer',
+                        color : '#707070',
+                        fontSize : '12px'
+                    }
+                }
+            }
+        },
+
+        /********************************************************************
+         * Error bar series 
+         ********************************************************************/
+        errorBar : {
+            series : [{
+                type: 'errorbar',
+                dataIndex: [ 'open', 'close' ],
+                color: Highcharts.getOptions().colors[0],
+                lineWidth: 3
+            }, {
+                type: 'errorbar',
+                maxDataIndex: 'high',
+                minDataIndex: 'low',
+                color: Highcharts.getOptions().colors[2]
+            }],
+            xField: 'date',
+            height : 500,
+            width : 700,
+            chartConfig : {
+                chart : {
+                    marginRight : 130,
+                    marginBottom : 120
+                },
+                title : {
+                    text: "Error bar - uses stock data for plotting two error bar series. (Open - Close) and (Low - High)",
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'First series - Open & Close (Non sorted series), 2nd Series- High & low (sorted series)',
+                    x: 0
+                },
+                xAxis: {
+                    title: {
+                        text: 'Date',
+                        align: 'high'
+                    },
+                    labels: {
+                        rotation: -45,
+                        align : 'center',
+                        y: 40,
+                        x: -20
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Price ($)'
+                    }
+                },
+                credits : {
+                    text : 'joekuan.wordpress.com',
+                    href : 'http://joekuan.wordpress.com',
+                    style : {
+                        cursor : 'pointer',
+                        color : '#707070',
+                        fontSize : '12px'
+                    }
+                }
+            }
+        },
+
+        /********************************************************************
+         * Box plot
+         ********************************************************************/
+        boxPlot : {
+            series : [{
+                type: 'boxplot',
+                xField: 'experiment',
+                minDataIndex: 'min',
+                lowQtrDataIndex: 'q1',
+                medianDataIndex: 'med',
+                highQtrDataIndex: 'q2',
+                maxDataIndex: 'max'
+            }],
+            height : 500,
+            width : 700,
+            chartConfig : {
+                chart : {
+                    marginRight : 130,
+                    marginBottom : 120
+                },
+                title : {
+                    text: "Box Plot series",
+                    x: -20 //center
+                },
+                xAxis: {
+                    allowDecimals: false,
+                    title: {
+                        text: 'Experiment No.',
+                        align: 'high'
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Observations'
+                    }
+                },
+                credits : {
+                    text : 'joekuan.wordpress.com',
+                    href : 'http://joekuan.wordpress.com',
+                    style : {
+                        cursor : 'pointer',
+                        color : '#707070',
+                        fontSize : '12px'
+                    }
+                }
+            }
+        },
+
+        /********************************************************************
+         * Water fall demo
+         ********************************************************************/
+        waterfall : {
+            series : [{
+                upColor: Highcharts.getOptions().colors[2],
+                color: Highcharts.getOptions().colors[3],
+                type: 'waterfall',
+                categorieField: 'category',
+                yField: 'value',
+                colorField: 'color',
+                sumTypeField: 'sum',
+                dataLabels: {
+                    enabled: true,
+                    formatter: function () {
+                        return Highcharts.numberFormat(this.y / 1000, 0, ',') + 'k';
+                    },
+                    style: {
+                        color: '#FFFFFF',
+                        fontWeight: 'bold'
+                    }
+                },
+                pointPadding: 0
+            }],
+            height : 500,
+            width : 700,
+            chartConfig : {
+                chart : {
+                    marginRight : 130,
+                    marginBottom : 120
+                },
+                title : {
+                    text: "Waterfall demo",
+                    x: -20 //center
+                },
+                xAxis: {
+                    type: 'category'
+                },
+                yAxis: {
+                    title: {
+                        text: 'USD'
+                    }
+                },
+                credits : {
+                    text : 'joekuan.wordpress.com',
+                    href : 'http://joekuan.wordpress.com',
+                    style : {
+                        cursor : 'pointer',
+                        color : '#707070',
+                        fontSize : '12px'
+                    }
+                }
+            }
+        },
+
+        /********************************************************************
+         * Funnel demo
+         ********************************************************************/
+        funnel : {
+            series : [{
+                type: 'funnel',
+                categorieField: 'category',
+                yField: 'value',
+                name: 'Unique users',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b> ({point.y:,.0f})',
+                    color: 'black',
+                    softConnector: true
+                },
+                neckWidth: '30%',
+                neckHeight: '25%'
+            }],
+            height : 500,
+            width : 700,
+            chartConfig : {
+                chart : {
+                    marginRight : 130,
+                    marginBottom : 120
+                },
+                title : {
+                    text: "Funnel demo",
+                    x: -20 //center
+                },
+                legend: {
+                    enabled: false
+                },
+                credits : {
+                    text : 'joekuan.wordpress.com',
+                    href : 'http://joekuan.wordpress.com',
+                    style : {
+                        cursor : 'pointer',
+                        color : '#707070',
+                        fontSize : '12px'
+                    }
                 }
             }
         },

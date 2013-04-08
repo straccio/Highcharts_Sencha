@@ -629,7 +629,7 @@ Ext.define('Chart.ux.Highcharts.RPieSerie', {
      * it is not recommended to override this method
      */
     getData: function(record, seriesData) {
-	var _this = (this.chart.sencha.product == 't') ? this.config : this;
+	var _this = (Chart.ux.Highcharts.sencha.product == 't') ? this.config : this;
 	// Summed up the category among the series data
 	if (this.totalDataField) {
 	    var found = null;

@@ -35,7 +35,7 @@ Ext.ns('Demo');
 Ext.application({
     name: 'Highcharts',
     requires:[
-      'Highcharts.ChartsMobileConfig'
+        'Highcharts.ChartsMobileConfig'
     ],
     appFolder: 'app',
 
@@ -64,8 +64,7 @@ Ext.application({
 	Ext.require('Highcharts.model.Fruits');
 	Ext.require('Highcharts.store.Fruits');
 
-        Demo.configs = Ext.create(Highcharts.ChartsMobileConfig);;
-
+        Demo.configs = Ext.create('Highcharts.ChartsMobileConfig');
         Ext.define('ChartDemo', {
             extend: 'Ext.data.Model',
             config: {
